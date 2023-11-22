@@ -62,10 +62,73 @@ router.post('/login', (req, res) => {
         if(theData.length  == 0)
             return res.json("Error");
         else
-            return res.json(theData);
+        {
+            if(theData[0]['status'] == 'Inactive')
+                return res.json("Inactive");
+            else
+                return res.json(theData);            
+        }
     })
+});
 
-    //return res.json(mno+' '+pwd);
+router.post('/checkOldPassword', (req, res) => {
+    const oldPwd = md5(req.body.old_pwd);
+    const userId = req.body.lin_user_id;
+    
+    const chkOldPwdQuery = 'SELECT full_name FROM users WHERE id = '+userId+' AND pwd = "'+oldPwd+'" ';    
+    db.query(chkOldPwdQuery, (err, data) => {
+        if(err) return "Error in the query to check the old password";
+
+        if(data.length == 0)
+            return res.json("Incorrect Old Password");
+        else
+            return res.json("Success");
+    })
+});
+
+router.post('/changePassword', (req, res) => {
+    const newPwd = md5(req.body.new_pwd);
+    const userId = req.body.lin_user_id;
+    
+    const updatePwdQuery = 'UPDATE users SET pwd = "'+newPwd+'" WHERE id = '+userId;
+    db.query(updatePwdQuery, (err, data) => {
+        if(err) return res.json("Serverside : Change Password query failed.");
+
+        return res.json("Success");
+    })
+});
+
+router.get('/getUserInfo/:uid', (req, res) => {
+    const userId = req.params.uid;
+    const gudQuery = 'SELECT id, full_name, mobile_no FROM users WHERE id = '+userId;
+    db.query(gudQuery, (err, uData) => {
+        if(err) return res.json("Serverside : Fetching user info query failed.");
+
+        return res.json(uData[0]);
+    })
+});
+
+router.get('/checkMobileNoExistsInUpdateProfile/:mno/:uid', (req, res) => {
+    const mobileNo = req.params.mno;   
+    const userId = req.params.uid;
+    const chkMNexists = "SELECT * FROM users WHERE mobile_no = ?";
+
+    db.query(chkMNexists, [mobileNo], (err, data) => {
+        console.log(data);
+        if(err) return res.json("Serverside : Mobile number verification query failed.");
+        
+        else if(userId != data[0]['id'])
+            return res.json("Mno Already Exists");        
+    })
+});
+
+router.post('/updateProfile', (req, res) => {
+    const upQuery = "UPDATE users set full_name = '"+req.body.full_name+"', mobile_no = '"+req.body.mobile_no+"' WHERE id = "+req.body.lin_user_id;
+    db.query(upQuery, (err, result) => {
+        if(err) return res.json("Serverside : Update Profile query failed.");
+
+        return res.json(result);
+    })
 });
 
 export default router;

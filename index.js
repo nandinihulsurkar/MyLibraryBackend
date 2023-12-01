@@ -3,6 +3,7 @@ import express from "express";
 import cors from "cors";
 
 import usersRoutes from "./routes/Users.js";
+import booksRoutes from "./routes/Books.js";
 
 const PORT = 8800;
 const app = express();
@@ -15,6 +16,7 @@ app.get('/', (req, res) => {
 });
 
 app.use('/users', usersRoutes);
+app.use('/books', booksRoutes)
 
 app.listen(PORT, () => {
     console.log("Connected to backend ");
